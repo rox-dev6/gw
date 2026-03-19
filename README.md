@@ -14,8 +14,6 @@
 
 ---
 
-## 📌 One-Line Pitch
-
 > **GigShield is an AI-powered, zero-touch parametric insurance platform that automatically protects Q-Commerce delivery partners from income loss caused by extreme weather, pollution, and civic disruptions — with weekly micro-premiums, instant payouts, and a multi-layered anti-spoofing defense that catches fraud rings before they drain a single rupee.**
 
 ---
@@ -61,7 +59,7 @@ The **Market Crash threat** — a syndicate of 500 delivery workers using GPS-sp
 | Attribute | Detail |
 |---|---|
 | **Age** | 24 |
-| **City** | Chennai (Korattur → Anna Nagar zone) |
+| **City** | Chennai |
 | **Platform** | Zepto |
 | **Daily Earnings** | ₹900–₹1,200 (₹25–₹40/order + surge + milestones) |
 | **Weekly Earnings** | ₹5,500–₹7,000 (6-day work week) |
@@ -637,8 +635,7 @@ gantt
 
 | Resource | Link |
 |----------|------|
-| **GitHub Repository** | [This repository] |
-| **Demo Video (2-min)** | [YouTube/Loom — Phase 1] |
+| **Demo Video (2-min)** | [https://drive.google.com/drive/folders/1mUh3e1g5_D2iPK3s0-t4NgtCyY4PbVQE?usp=drive_link] |
 
 ---
 
