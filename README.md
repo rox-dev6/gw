@@ -732,7 +732,12 @@ gantt
 
 *We build safety nets for the people who power India's 10-minute revolution.*
 
-*When the streets flood and the app goes dark — DevGodz makes sure the rider doesn't go home empty-handed.*
+| Member | Role |
+|:---:|:---:|
+| **Siddhant Kaushik** | 👑 Team Lead |
+| **Pollock Deb** | Core Team |
+| **Atul Bhardwaj** | Core Team |
+| **Devamithra Ramesan Bhavya** | Core Team |
 
 </div>
 
