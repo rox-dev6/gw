@@ -34,14 +34,14 @@
 - [Meet Arjun — Our User](#-meet-arjun--our-user)
 - [How It Works — The GigShield Journey](#-how-it-works--the-gigshield-journey)
 - [Weekly Premium Model — Project Kavach](#-weekly-premium-model--project-kavach)
-- [Platform Choice — Why a PWA?](#-platform-choice--why-a-pwa)
+- [Platform Choice — Why Not a Pure PWA?](#-platform-choice--why-not-a-pure-pwa)
 - [AI/ML — The Three Brains of GigShield](#-aiml--the-three-brains-of-gigshield)
 - [Adversarial Defense & Anti-Spoofing Strategy](#-adversarial-defense--anti-spoofing-strategy)
 - [System Architecture — The Blueprint](#-system-architecture--the-blueprint)
 - [Tech Stack](#-tech-stack)
+- [UI/UX — Designed for the Streets](#-uiux--designed-for-the-streets)
 - [Development Roadmap](#-development-roadmap)
 - [What Makes Us Different](#-what-makes-us-different)
-- [Dashboards & Analytics](#-dashboards--analytics)
 - [Risks, Assumptions & Future Vision](#-risks-assumptions--future-vision)
 - [Built By — Team DevGodz](#-built-by--team-devgodz)
 
@@ -51,9 +51,9 @@
 
 > **It's 2 PM in Chennai. The sky cracks open. 80mm of rain in 3 hours.**
 >
-> Arjun — a 24-year-old Zepto delivery rider — watches the roads flood from under a tea-stall awning. He can't ride. He can't deliver. He can't earn. The Zepto app goes grey: *"Deliveries paused in your area."*
+> Arjun, a 24 year-old Zepto delivery rider watches the roads flood from under a tea-stall awning. He can't ride. He can't deliver. He can't earn. The Zepto app goes grey: *"Deliveries paused in your area."*
 >
-> By evening, Arjun has lost **₹1,100** — nearly half his daily wage. Tomorrow, his rent is due. He has no insurance, no safety net, no one to call. He just... absorbs the loss.
+> By evening, Arjun has lost **₹1,100**, nearly half his daily wage. Tomorrow, his rent is due. He has no insurance, no safety net, no one to call. He just... absorbs the loss.
 >
 > **This happens to 7.5 million gig workers across India. Every monsoon. Every heatwave. Every sudden curfew.**
 >
@@ -128,7 +128,7 @@ No claims filing. No adjuster visits. No ambiguity. If the measurable threshold 
 >
 > **Without GigShield:** Arjun loses ₹1,100. He texts his roommate: *"Rent short this week."*
 >
-> **With GigShield (proposed flow):** At 2:16 PM, SENTINEL detects IMD Red Alert in Zone 4. At 2:17 PM, AEGIS validates Arjun's location (cell tower match, phone discharging, accelerometer shows sheltering-in-place). At 2:19 PM, **₹1,100 hits Arjun's UPI.** He gets a push notification: *"₹1,100 credited. Stay safe, Arjun. 🛡️"*
+> **With GigShield (proposed flow):** At 2:16 PM, SENTINEL detects IMD Red Alert in Zone 4. At 2:17 PM, AEGIS validates Arjun's location (cell tower match, phone discharging, accelerometer shows sheltering-in-place). At 2:19 PM, **₹1,100 hits Arjun's UPI.** His phone vibrates with a distinct haptic pattern and speaks in Tamil: *"Ungal account-il ₹1,100 transfer aagiyirukkiRathu."*
 >
 > **Target: disruption to payout in under 5 minutes.**
 
@@ -152,7 +152,7 @@ No claims filing. No adjuster visits. No ambiguity. If the measurable threshold 
 
 ```mermaid
 flowchart TD
-    A["📲 Arjun Downloads GigShield\n(PWA — no app store needed)"] --> B["📋 60-Second Onboarding\n(Phone OTP + Zepto ID + UPI)"]
+    A["📲 Arjun Installs GigShield\n(~10 MB APK via WhatsApp or Play Store)"] --> B["📋 60-Second Onboarding\n(Phone OTP + Zepto ID + UPI)"]
     B --> C["🤖 AI Risk Profile Generated\n(Zone risk + weather history + delivery patterns)"]
     C --> D["💰 Weekly Premium Quote\n(₹29–₹79 based on risk score)"]
     D --> E["✅ Policy Activated\n(UPI AutoPay every Monday)"]
@@ -182,20 +182,26 @@ flowchart TD
 sequenceDiagram
     participant IMD as 🌧️ IMD Weather API
     participant S as 🛡️ SENTINEL Monitor
+    participant DB as 🗄️ PostGIS Database
     participant A as 🔍 AEGIS Fraud Engine
     participant K as 💰 KAVACH Premium Engine
-    participant W as 👤 Arjun (Worker)
     participant R as 💳 Razorpay (UPI)
+    participant SSE as 📡 SSE Push
+    participant W as 👤 Arjun (Worker)
 
     IMD->>S: Red Alert issued — Chennai Zone 4
-    S->>S: Match Zone 4 to 847 active policyholders
-    S->>A: Validate Arjun — send location + sensor + network signals
+    S->>DB: ST_Contains query — find active policyholders in Zone 4
+    DB-->>S: 847 workers matched via spatial index
+    S->>A: Validate Arjun — location + sensor + network signals
+    A->>DB: Fetch historical route data + device fingerprint
     A->>A: Trust Score = 0.91 (cell tower ✓, accelerometer ✓, battery draining ✓)
     A-->>S: APPROVED — genuine disruption
     S->>R: Initiate ₹1,100 payout → Arjun's UPI
-    R-->>W: ₹1,100 credited ✅
-    S->>W: Push: "₹1,100 credited. Stay safe, Arjun! 🛡️"
+    R-->>S: Payment confirmed ✅
+    S->>SSE: Push payout notification
+    SSE-->>W: ₹1,100 credited + haptic buzz + voice: "Aapke account mein ₹1,100 transfer ho gaye hain"
     S->>K: Log event → adjust next week's Zone 4 risk score
+    S->>DB: Write audit trail — trigger, score, payout, decision rationale
 ```
 
 ---
@@ -287,20 +293,45 @@ flowchart LR
 
 ---
 
-## 📱 Platform Choice — Why a PWA?
+## 📱 Platform Choice — Why Not a Pure PWA?
 
-> *We asked ourselves: "Would Arjun install a 70MB app from the Play Store while on a delivery break?" The answer was obvious.*
+> *We asked ourselves: "Would Arjun install a 70MB app from the Play Store while on a delivery break?" The answer was no. But then we asked: "Can a browser read cell tower IDs and run background sensors?" The answer was also no.*
 
-**Chosen: Progressive Web App (PWA)** for workers + **React Web Dashboard** for admin/ops.
+**Chosen: Capacitor-Wrapped PWA** (web-first architecture with a lightweight native shell) for workers + **React + Recharts Web Dashboard** (with Tailwind CSS + shadcn/ui) for admin/ops.
 
-| Factor | Why PWA Wins |
+### The Problem with a Pure PWA
+
+Our AEGIS anti-spoofing engine relies on **native mobile device signals** — cell tower IDs, Wi-Fi network scans, background motion data, and battery drain patterns. Modern browsers **sandbox all of this** for privacy:
+
+| Signal AEGIS Needs | Browser Access? | Why It's Blocked |
+|---|:---:|---|
+| Cell tower IDs | ❌ | No web API exists — requires Android's `TelephonyManager` |
+| Wi-Fi network scanning | ❌ | No web API — requires Android's `WifiManager` |
+| Background motion sensors | ⚠️ Foreground only | `DeviceMotionEvent` stops when user switches apps |
+| Battery drain rate & charge state | ⚠️ Limited | `navigator.getBattery()` gives basic level/charging but not drain patterns over time |
+| GPS accuracy metadata | ⚠️ Partial | `Geolocation API` provides coords but not satellite geometry (HDOP) |
+
+A pure PWA would leave AEGIS blind to the most critical fraud signals. **Without cell tower and network data, the 500-user syndicate wins.**
+
+### The Solution: Capacitor-Wrapped PWA
+
+[Capacitor](https://capacitorjs.com/) wraps our React + Vite web app in a thin native shell, giving us the **best of both worlds**:
+
+| Factor | Benefit |
 |---|---|
-| 📦 **Zero install friction** | 90%+ of riders use budget Android phones with 32–64 GB storage already packed with Zepto, WhatsApp, and UPI apps. PWA loads in the browser — no Play Store, no 70MB download. |
-| 📲 **WhatsApp-native distribution** | *"Bhai, ye link try kar — baarish mein paisa milta hai"* — shared in rider WhatsApp groups. QR codes on dark-store walls. Grassroots virality. |
-| 📴 **Offline-first** | Service workers cache policy status and claim history. Arjun can check his coverage even in a dead zone during a storm. |
-| 🔔 **Push alerts** | Web Push API delivers real-time disruption warnings and payout confirmations. |
-| 💳 **Native UPI** | UPI deep links work natively on Android — no SDK, no wrapping. |
-| 💻 **One codebase** | Ship faster during the hackathon. Iterate faster post-hackathon. |
+| 📦 **Lightweight install** | ~8–10 MB APK vs. 60–80 MB for a full native app. Fits on budget 32 GB phones. |
+| 🔌 **Native device access** | Capacitor plugins for motion sensors, battery status, network info, and device identity — AEGIS gets every signal it needs |
+| 📲 **WhatsApp distribution** | APK shareable via WhatsApp or QR codes at dark-store walls. Play Store listing optional. |
+| 📴 **Background execution** | Native background tasks allow continuous device data collection during active delivery shifts |
+| 🔔 **Real-time alerts** | Server-Sent Events (SSE) for instant payout and disruption notifications + Firebase Cloud Messaging (FCM) for background push when app is closed |
+| 💳 **UPI deep links** | Native intent system for seamless UPI payment flows |
+| 💻 **One codebase** | 95% of UI is still React + Vite (web tech) with Tailwind CSS + shadcn/ui. Only sensor access layer uses native plugins. Fast hackathon iteration. |
+| 🌐 **Offline-first** | TanStack Query persistence + Capacitor's native storage + service workers cache policy status, claim history, and last-known alerts |
+
+> [!IMPORTANT]
+> **Why not React Native?** React Native would also work, but Capacitor lets us keep our existing React + Vite web codebase and add native capabilities incrementally. For a hackathon, this is faster to ship while still giving AEGIS the native device access it needs.
+
+**Admin Dashboard:** A full React web dashboard (Tailwind CSS + shadcn/ui + Recharts) for insurer ops teams to monitor policies, review SSE-fed live claims, track loss ratios, and observe risk heatmaps. No native wrapper needed — admins work on desktops.
 
 ---
 
@@ -330,12 +361,16 @@ flowchart TD
     end
 
     subgraph "🔍 Brain 3: AEGIS — Fraud Detection"
-        M3["Isolation Forest + LSTM + Graph Clustering\nLearns: what genuine vs spoofed looks like\nOutput: Trust Score 0–1"]
+        M3["Isolation Forest + DBSCAN Clustering\nLearns: what genuine vs spoofed looks like\nOutput: Trust Score 0–1"]
+    end
+
+    subgraph "💾 Spatial Data"
+        PG["PostGIS\nRoute History · Geofences"]
     end
 
     D1 & D2 & D5 --> M1
     D1 & D2 & D3 & D6 --> M2
-    D4 & D5 --> M3
+    D4 & D5 & PG --> M3
 ```
 
 ### What's Intelligent vs. What's Rule-Based
@@ -360,7 +395,7 @@ flowchart TD
 #### 🔍 AEGIS — Fraud Detection Engine
 - **Layer 1 — Isolation Forest:** Detects point-in-time behavioral anomalies at claim moment (location, sensor telemetry, timing patterns). Chosen for its efficiency on high-dimensional data with no labeled fraud examples (unsupervised)
 - **Layer 2 — LSTM (Target Architecture):** Analyses the worker's movement trajectory over 7 days to flag sudden location inconsistencies. Initially implemented as statistical feature comparison (mean/variance of GPS accuracy, speed, and zone dwell time vs. historical baseline) — upgraded to LSTM in Phase 3 as training data accumulates
-- **Layer 3 — DBSCAN Spatial-Temporal Clustering:** Groups simultaneous claims by geographic proximity and temporal density to detect coordinated rings. Uses Haversine distance metric for geospatial accuracy
+- **Layer 3 — DBSCAN Spatial-Temporal Clustering:** Groups simultaneous claims by geographic proximity and temporal density to detect coordinated rings. Leverages PostGIS `ST_DWithin` for geospatial proximity queries with spatial indexes, replacing application-level Haversine computation
 - **Output:** Trust Score (0–1); score ≥ 0.80 auto-approves, 0.50–0.79 triggers soft review, < 0.50 routes to ops
 - **Active learning:** Every confirmed fraud case feeds back into the model weekly; every false positive refines the scoring weights
 
@@ -393,22 +428,21 @@ A spoofer can tell the system "I'm at 13.08° N, 80.27° E — right in the floo
 - The way cell towers change when you're actually outdoors
 - The absence of their home Wi-Fi when they claim to be 12 km away
 
-**AEGIS cross-references claimed location against physical reality across 8 independent signal layers:**
+**AEGIS cross-references claimed location against physical reality across 7 independent signal layers:**
 
 | Signal Layer | 🟢 Genuine (Arjun in a storm) | 🔴 Spoofer (Raj at home) |
 |---|---|---|
 | **Cell Tower ID** | Matches GPS zone tower | Mismatches — home tower, not flood-zone tower |
-| **GPS Accuracy (HDOP)** | HDOP > 5 (degraded) — storms and dense clouds disrupt satellite geometry | HDOP < 1 (artificially ideal) — spoofing apps report perfect fix quality that's physically unlikely during severe weather |
-| **Accelerometer** | Micro-vibrations — sheltering, walking, bike idle | Dead-flat XYZ axis — phone on a desk |
-| **Gyroscope** | Orientation shifts — handled, pocketed, moved | Perfectly stable — untouched device |
-| **Wi-Fi BSSID Scan** | Public/commercial networks or none (outdoor) | Matches historical home Wi-Fi cluster |
-| **Battery State** | Discharging rapidly (outdoor GPS + screen use) | Charging on wall outlet (home) |
-| **Battery Thermal Profile** | Elevated — active GPS navigation heats the SoC | Cool — spoofing runs silently in background |
-| **Platform App Status** | Online, 0 orders (platform paused deliveries) | Offline or no login for hours |
+| **GPS Accuracy** | Degraded precision — storms disrupt satellite signals, GPS jumps around | Suspiciously stable & precise — spoofing apps fake a clean GPS fix |
+| **Motion Sensors** | Accelerometer shows micro-vibrations (sheltering, walking, bike idle); gyroscope shows natural orientation shifts | Phone is stationary on a desk — flat motion profile, no orientation change |
+| **Nearby Wi-Fi Networks** | Detects public/commercial SSIDs or no Wi-Fi at all (outdoor) | Detects worker's home Wi-Fi network — same SSID they connect to every night |
+| **Battery Behavior** | Draining rapidly (active GPS + screen + navigation = heavy power draw) | Charging or draining slowly (phone idle at home, spoofing uses minimal power) |
+| **Network Quality** | Signal drops, high latency, cell tower handovers — typical of bad weather | Stable 4G, zero drops — typical of indoor home use |
+| **Platform App Status** | Zepto app online, 0 orders (platform paused deliveries) | Zepto app offline or no login for hours — wasn't working when storm hit |
 
 **The Trust Score:**
 
-All 8 signals feed a weighted ensemble producing a **Trust Score (0 to 1)**:
+All 7 signals feed a weighted ensemble producing a **Trust Score (0 to 1)**:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -425,18 +459,17 @@ All 8 signals feed a weighted ensemble producing a **Trust Score (0 to 1)**:
 
 ### B. The Data — What We Analyze Beyond GPS
 
-GPS is just one of many signals. AEGIS ingests **8 evidence categories** that spoofing apps fundamentally cannot fake:
+GPS is just one of many signals. AEGIS ingests **7 evidence categories** that spoofing apps fundamentally cannot fake:
 
-| Category | Signals | Why Spoofers Can't Fake It |
+| Category | What the App Collects | Why Spoofers Can't Fake It |
 |---|---|---|
-| **📱 Device Sensors** | Accelerometer, gyroscope, magnetometer | A phone on a desk ≠ a phone on a bike in rain. The physics are different. |
-| **🔋 Battery & Thermal Forensics** | Discharge rate, device temperature (SoC thermal sensor), charge state | Real outdoor GPS + screen use spikes device temperature to 35–40°C and drains battery rapidly. Spoofing at home: device stays cool (~28°C) and often plugged into charger. |
-| **📶 Network Fingerprint** | Wi-Fi BSSIDs, cell tower IDs, signal strength | If 50 "stranded" workers share the same Wi-Fi MAC address, they're in one room. |
-| **🌐 Connectivity** | Latency patterns, signal drop frequency, handover count | Real storms cause signal chaos. Spoofing from home shows stable 4G with zero drops. |
-| **🗺️ Route History** | Historical delivery patterns, zone familiarity | Worker claiming disruption in a zone they've never once delivered in = 🚩 |
-| **🌧️ Weather Cross-Ref** | Real-time weather API data at claimed coordinates | If there's no weather event at the claimed location, the claim is physically impossible. |
-| **📦 Platform Activity** | Zepto order-attempt logs, app foreground time, last active | Workers offline since 9 AM can't be "stranded mid-delivery" at 2 PM. |
-| **👆 Session Behavior** | Screen interactions, notification response, app navigation | Genuine workers tap naturally. Bots show mechanical patterns or zero interaction. |
+| **📱 Motion Sensors** | Accelerometer & gyroscope data (via Capacitor plugin) | A phone on a desk has zero motion. A phone on a bike in rain has vibrations, tilts, and orientation shifts. Spoofing apps can't simulate this. |
+| **🔋 Battery Behavior** | Drain rate, charge state (via Capacitor Battery plugin) | Active GPS + screen + navigation drains battery fast. A phone spoofing at home is often charging or barely draining. |
+| **📶 Network Environment** | Nearby Wi-Fi SSIDs, cell tower IDs, signal strength (via native APIs) | If 50 "stranded" workers are all connected to the same home Wi-Fi network, they're in one room — not outdoors in a storm. |
+| **🌐 Connectivity Quality** | Signal stability, latency patterns, network drops | Real storms cause signal chaos and tower handovers. Spoofing from home shows stable 4G with zero interruptions. |
+| **🗺️ Route History** | Historical delivery GPS traces stored server-side | Worker claiming disruption in a zone they've never once delivered in = 🚩 |
+| **🌧️ Weather Cross-Ref** | Real-time weather API data at claimed coordinates | If there's no weather event at the claimed location, the claim is physically impossible. Server-side check. |
+| **📦 Platform Activity** | Zepto order-attempt logs, app usage data, last active | Workers offline since 9 AM can't be "stranded mid-delivery" at 2 PM. Server-side cross-check. |
 
 ---
 
@@ -525,17 +558,17 @@ stateDiagram-v2
 
 ---
 
-## 🏗️ Proposed System Architecture — The Blueprint
+## 🏗️ System Architecture — The Blueprint
 
 ```mermaid
 flowchart LR
     subgraph "👥 Client Layer"
-        U["📱 Worker PWA\n(React + Vite)"]
-        D["🖥️ Admin Dashboard\n(React)"]
+        U["📱 Worker App\n(React + Vite + Capacitor\n+ TanStack Query)"]
+        D["🖥️ Admin Dashboard\n(React + Recharts)"]
     end
 
     subgraph "🔀 API Gateway"
-        API["⚡ FastAPI\n(Python · Async)"]
+        API["⚡ FastAPI\n(Python · Async · SSE)"]
     end
 
     subgraph "🧩 Core Services"
@@ -556,7 +589,7 @@ flowchart LR
     end
 
     subgraph "💾 Data Layer"
-        DB[("🗄️ PostgreSQL\nUsers · Policies · Claims")]
+        DB[("🗄️ PostgreSQL + PostGIS\nUsers · Policies · Claims\n+ Spatial Indexes")]
         RD[("⚡ Redis\nTrigger Cache · Sessions")]
         FS["📊 Feature Store\nML Training Data"]
     end
@@ -565,9 +598,15 @@ flowchart LR
         RZ["🏦 Razorpay Sandbox\nUPI Test Mode"]
     end
 
+    subgraph "📡 Real-Time Layer"
+        SSE["📡 SSE Push\n(Trigger Alerts · Payouts)"]
+    end
+
     U --> API
     D --> API
     API --> P & KV & SN & CL & AE & PY
+    API --> SSE
+    SSE -.->|"Push Events"| U & D
     SN --> W & AQ & ND & PL & NW
     AE --> FS
     PY --> RZ
@@ -581,9 +620,10 @@ flowchart LR
 |---|---|
 | 🎯 **Separation of intelligence** | Rule-based triggers (SENTINEL) are kept separate from ML-based scoring (AEGIS/KAVACH). Auditable where it matters, intelligent where it helps. |
 | 🧱 **Modular services** | Each function (premium, trigger, fraud, payout) is an independent service. Teams can work in parallel. One service failing doesn't crash the system. |
-| 📡 **Event-driven monitoring** | SENTINEL polls external APIs at configurable intervals and fires events when thresholds breach. Asynchronous — doesn't block the main API. |
+| 📡 **Event-driven with SSE** | SENTINEL monitors external APIs and fires Server-Sent Events on threshold breaches. Workers and admins receive real-time push without polling. |
 | 🔧 **Mock-first development** | All external APIs use free-tier or mock sources in Phases 1–2. Swappable for production integrations later. |
-| 📈 **Horizontal scalability** | Stateless services behind FastAPI. Redis handles ephemeral state. Celery workers handle async tasks. Scales horizontally under load. |
+| 📈 **Horizontal scalability** | Stateless services behind FastAPI. Redis handles ephemeral state. Celery workers handle async tasks. PostGIS spatial indexes handle geo-queries at scale. |
+| 🔍 **Audit-first observability** | Every trigger decision, trust score computation, and payout event is logged with full context as structured JSON. Enables regulatory compliance and post-mortem analysis. |
 
 ---
 
@@ -591,20 +631,21 @@ flowchart LR
 
 | Layer | Technology | Why This Choice |
 |:---:|---|---|
-| **Frontend (Worker)** | React 18 + Vite (PWA) | Lightweight, offline-capable, no app store |
-| **Frontend (Admin)** | React 18 + Vite | Full dashboard with charts and review queues |
-| **Backend** | FastAPI (Python) | Async, high-performance, native ML integration |
-| **ML/AI** | scikit-learn · XGBoost · Joblib | XGBoost for premium; Isolation Forest for anomaly detection; Joblib for model serialization and serving |
-| **Task Queue** | Celery + Redis | Async trigger monitoring and batch scoring |
-| **Database** | PostgreSQL | Relational: users, policies, claims, payouts |
-| **Cache** | Redis | Trigger state, sessions, rate limiting |
-| **Auth** | Firebase Auth (Phone OTP) | Zero-friction phone-based login |
+| **Frontend (Worker)** | React 18 + Vite + Capacitor + TanStack Query + Tailwind CSS + shadcn/ui | Web-first UI with native shell for sensor access. TanStack Query handles offline caching & retries on degraded networks. ~8–10 MB APK. |
+| **Frontend (Admin)** | React 18 + Vite + TanStack Query + Tailwind CSS + shadcn/ui + Recharts | Full dashboard with charts, heatmaps, and review queues. Same design system as worker app. |
+| **Backend** | FastAPI (Python · Async) + SSE | Async, high-performance, native ML integration. SSE for real-time push (payout alerts, trigger notifications). |
+| **ML/AI** | scikit-learn · XGBoost · Isolation Forest · DBSCAN · Joblib · Prophet (Phase 3) | XGBoost for premium pricing; Isolation Forest for anomaly detection; DBSCAN for ring clustering; Prophet for liquidity forecasting; Joblib for model serialization. |
+| **Task Queue** | Celery + Redis | Async trigger monitoring, batch scoring, and retraining jobs |
+| **Database** | PostgreSQL + PostGIS | Relational + spatial: users, policies, claims, payouts, and geospatial zone matching via spatial indexes |
+| **Cache** | Redis | Trigger state, sessions, rate limiting, SSE connection tracking |
+| **Auth** | Firebase Auth (Phone OTP) | Zero-friction phone-based login for gig workers |
 | **Payments** | Razorpay Sandbox (UPI test) | Simulated UPI payouts; production-ready SDK |
-| **Weather** | IMD API + OpenWeatherMap | Primary + fallback weather feeds |
-| **AQI** | CPCB API / WAQI | Real-time pollution data |
-| **Geo** | OpenStreetMap + Leaflet | Zone definition and geo-fence matching |
-| **Deployment** | Docker + Render | Containerized; free-tier cloud for hackathon |
-| **VCS** | GitHub | Single repo, all phases |
+| **Weather** | IMD API + OpenWeatherMap | Primary + fallback weather feeds with Redis-cached failover |
+| **AQI** | CPCB API / WAQI | Real-time pollution data for trigger detection |
+| **Geo** | OpenStreetMap + Leaflet | Zone definition, risk heatmaps, and geo-fence visualization |
+| **Observability** | Structured JSON logging + Claim audit trail | Every trigger, score, and payout decision logged with full context |
+| **Deployment** | Docker + Render | Containerized services; free-tier cloud for hackathon |
+| **VCS** | GitHub | Monorepo, all phases |
 
 ---
 
@@ -628,17 +669,19 @@ gantt
     Claims Management & Auto-Trigger    :p2d, 2026-04-01, 4d
 
     section Phase 3 — Scale & Optimize
-    AEGIS Fraud Detection (Anti-Spoof)  :p3a, 2026-04-05, 6d
-    Payout Integration (Razorpay)       :p3b, 2026-04-07, 4d
-    Worker & Admin Dashboards           :p3c, 2026-04-10, 5d
-    Final Testing & Demo Video          :p3d, 2026-04-15, 3d
+    AEGIS Fraud Detection - Isolation Forest   :p3a, 2026-04-05, 3d
+    AEGIS Ring Detection - DBSCAN Clustering    :p3a2, 2026-04-08, 3d
+    Market Shift Defense Testing                :p3a3, 2026-04-10, 2d
+    Payout Integration (Razorpay)               :p3b, 2026-04-07, 4d
+    Worker & Admin Dashboards                   :p3c, 2026-04-10, 5d
+    Final Testing & Demo Video                  :p3d, 2026-04-15, 3d
 ```
 
-| Phase | Deadline | Key Outcomes |
-|---|---|---|
-| **Phase 1** | March 20 (today) | ✅ This README · GitHub repo · 2-min strategy video |
-| **Phase 2** | April 4 | Registration · policy engine · KAVACH · SENTINEL triggers · claims flow · 2-min demo |
-| **Phase 3** | April 17 | AEGIS fraud detection · simulated payouts · dashboards · 5-min demo · pitch deck |
+| Phase | Key Outcomes |
+|---|---|
+| **Phase 1** | ✅ This README · GitHub repo · 2-min strategy video |
+| **Phase 2** | Registration · policy engine · KAVACH · SENTINEL triggers · claims flow · 2-min demo |
+| **Phase 3** | AEGIS fraud detection (Isolation Forest + DBSCAN ring detection + Market Shift defense) · simulated payouts · dashboards · 5-min demo · pitch deck |
 
 ---
 
@@ -653,31 +696,60 @@ gantt
 | 🤝 **Worker-humane UX** | 80% immediate payout on soft flags. Zone-level boosts. Network drop exceptions. Appeal windows. The system is strict on fraud *and* kind to honest workers. |
 | ⚡ **5-minute payout** | Disruption detected → Trust Score computed → ₹ in UPI. Under 5 minutes for auto-approved claims. No other parametric platform promises this. |
 | 📊 **Predictive liquidity** | Prophet forecasts next week's claim exposure so the payout pool is never caught underfunded — even during mass-disruption events. |
+| 🌧️ **Built for the Streets** | High-contrast Sunlight Mode, 60px wet-finger touch targets, traffic-light glance UI, and vernacular voice alerts in Hindi/Tamil. Designed for a Redmi on a Hero Splendor, not a MacBook in an office. |
 
 ---
 
-## 📊 Dashboards & Analytics
+## 🎨 UI/UX — Designed for the Streets
 
-### 👤 Worker Dashboard — *Arjun's View*
+> *GigShield isn't designed for a Figma review on a MacBook. It's designed for a Redmi Note 12 strapped to a Hero Splendor in a Chennai monsoon.*
 
-| Element | Shows |
+### Physical-Environment Adaptations
+
+Every UI decision is stress-tested against Arjun's reality: wet screens, direct sunlight, degraded connectivity, and zero attention span.
+
+| Feature | What It Does | Why It Matters |
+|---|---|---|
+| ☀️ **Sunlight Mode** | Ultra-high-contrast theme — pure white background, heavy-weight black text, hyper-saturated accents. Auto-activates via ambient light sensor or manual toggle. | Dark mode is unreadable on a budget phone under the Indian sun. Sunlight Mode is the default daytime experience. |
+| 🌧️ **Wet-Finger Touch Targets** | Every interactive element is minimum 60px tall. No small text links. No tiny close buttons. All CTAs are full-width, chunky, tap-friendly blocks. | When it rains — the exact moment GigShield fires — Arjun's screen is wet. Large targets eliminate mis-taps. |
+| 🚦 **Traffic-Light Glance UI** | The home screen communicates state through color before text: 🟢 Safe · 🟠 Alert Incoming · 🔵 Payout Processing · 🔴 Action Needed. | Arjun can't read a paragraph at a red light. Color-first design conveys status in under 1 second. |
+| 🗣️ **Vernacular Voice Alerts** | On payout credit, the app fires a distinct haptic vibration pattern (Capacitor Haptics) and speaks in Hindi/Tamil: *"Aapke account mein ₹1,100 transfer ho gaye hain."* | A push notification can be missed. A spoken confirmation in the worker's own language builds visceral trust. |
+| 📴 **Offline-First Resilience** | TanStack Query persistence + Capacitor native storage caches policy status, claim history, and last-known alerts. | During a storm, network dies first. The app must show coverage status even with zero connectivity. |
+
+### 📱 Worker App — Arjun's View
+
+| Screen | Key Elements |
 |---|---|
-| 🛡️ **Coverage Status** | "Your Standard plan is active until Sunday" |
-| 💰 **This Week's Premium** | "₹47 paid on Monday" |
-| ⚠️ **Live Alerts** | "🌧️ Heavy rain expected in your zone tomorrow" |
-| 📋 **Claim Tracker** | "Claim #1847 → Verified → ₹1,100 paid on Mar 12" |
-| 📈 **Earnings Protected** | "₹4,200 protected this month across 3 disruptions" |
+| **🏠 Home** | Coverage status badge · current week premium · earnings protected this month · live weather alert card |
+| **📊 Risk Forecast** | Zone risk meter · 7-day disruption forecast · "premium may adjust next week" notice |
+| **📋 Claim Timeline** | Vertical timeline: trigger detected → verification in progress → payout sent → complete |
+| **✅ Trust Status** | "Verified Worker" badge · clean-history streak · trust tier indicator (no raw scores shown) |
+| **📸 Soft Review** | Friendly wording · photo upload with camera shortcut · location confirmation · zero accusatory language |
 
-### 🖥️ Admin Dashboard — *Ops Team View*
+### 🖥️ Admin Dashboard — Ops Control Room
 
-| Element | Shows |
+| Panel | What It Shows |
 |---|---|
-| 📊 **Policy Volume** | Weekly activations, renewals, and lapse rates |
-| 📉 **Loss Ratio** | Current week vs. 4-week rolling average |
-| 🗺️ **Risk Heatmap** | Geographic visualization of zone-level risk scores |
-| 🚨 **Fraud Alerts** | Ring detection alerts with cluster visualization |
-| 📋 **Review Queue** | Flagged claims with Trust Score breakdown |
-| 🔮 **Next-Week Forecast** | "₹2.3L expected claims — ₹3.0L reserved (30% buffer)" |
+| 📊 **Policy Overview** | Weekly activations, renewals, and lapse rates (Recharts line + bar) |
+| 📉 **Loss Ratio** | Current week vs. 4-week rolling average (donut + trend line) |
+| 🗺️ **Risk Heatmap** | Leaflet-powered geographic visualization of zone-level risk scores |
+| 🚨 **Fraud Ring Alerts** | Cluster visualization map with temporal density chart and social graph links |
+| 📋 **Live Claims Queue** | SSE-fed real-time table with Trust Score breakdown drawer |
+| 💰 **Payout Pipeline** | Status view: pending → processing → completed → failed |
+| 🔮 **Reserve Health** | Liquidity pool gauge: current balance vs. forecasted claims |
+| 🧠 **Model Confidence** | Per-model accuracy indicators for KAVACH, AEGIS, and ring detection |
+
+### Design Philosophy
+
+```
+Not a flashy fintech carnival. A safety cockpit.
+───────────────────────────────────────────────
+✓ Reassuring       ✓ Fast           ✓ Mobile-first
+✓ Financially clear ✓ Non-punitive   ✓ Zero clutter
+```
+
+> [!TIP]
+> **The One Story:** Everything in the interface reinforces a single narrative — *"A worker gets protected in minutes, not months."* Onboarding is quick. Premium is understandable. Risk is visible. Payout is automatic. Fraud checks are invisible unless needed.
 
 ---
 
@@ -716,7 +788,7 @@ gantt
 | Feature | Timeline | Impact |
 |---|---|---|
 | **Multi-persona expansion** | Post-hack | Extend to food delivery (Zomato/Swiggy) and e-commerce riders |
-| **On-device ML (TFLite via TWA/Capacitor)** | Phase 3+ | Wrap PWA in Trusted Web Activity or Capacitor to access native APIs; deploy TFLite models for real-time sensor analysis without server round-trips |
+| **On-device ML (TFLite)** | Phase 3+ | Deploy TensorFlow Lite models via Capacitor's native layer for real-time motion analysis without server round-trips |
 | **Regional languages** | Phase 3 | Tamil, Hindi, Telugu, Kannada for push notifications and onboarding |
 | **Live UPI AutoPay** | Production | Replace Razorpay sandbox with real UPI mandates |
 | **Reinsurance marketplace** | Long-term | Connect parametric policies to reinsurance partners |
